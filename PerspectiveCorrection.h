@@ -1,3 +1,6 @@
+#ifndef __PERSPECTIVE_CORRECTION_H__
+#define __PERSPECTIVE_CORRECTION_H__
+
 #include "OpenCV.h"
 using namespace cv;
 
@@ -24,3 +27,5 @@ private:
 
   void calculateTransformationMatrix();
 };
+
+#endif

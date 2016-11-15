@@ -31,12 +31,16 @@ void PerspectiveCorrection::setOutputWidth(int width) {
   if(width <= 0)
     return;
   _params.width = width;
+
+  calculateTransformationMatrix();
 }
 
 void PerspectiveCorrection::setOutputHeight(int height) {
   if(height <= 0)
     return;
   _params.height = height;
+
+  calculateTransformationMatrix();
 }
 
 

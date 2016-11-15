@@ -11,6 +11,8 @@ RetinaFilter filt;
 int adaptiveThresh =0;
 int adaptiveKernelSize = 3;
 int brightness = 255;
+int width = 400;
+int height = 400;
 
 void adaptiveThreshChanged(int,void*) {
 	filt.setNoiseSupressionLeveL(adaptiveThresh);
@@ -22,6 +24,14 @@ void adaptiveKernelSizeChanged(int,void*) {
 
 void brightnessChanged(int,void*) {
 	filt.setBrightness(brightness);
+}
+
+void heightChanged(int,void*) {
+	filt.getPerspectiveCorrection().setOutputHeight(height);
+}
+
+void widthChanged(int,void*) {
+	filt.getPerspectiveCorrection().setOutputWidth(width);
 }
 
 
@@ -51,15 +61,12 @@ void setupPerspectiveTransform(VideoCapture& cap,PerspectiveCorrection& persp) {
 
 	destroyWindow("select four points");
 
-	PerspectiveCorrectionParams params;
-	params.tl = points[0];
-	params.tr = points[1];
-	params.bl = points[2];
-	params.br = points[3];
-	params.width = 400;
-	params.height = 400;
 
-	persp = PerspectiveCorrection(params);
+	persp.setSurfaceCorners(points[0],points[1],points[2],points[3]);
+	persp.setOutputHeight(400);
+	persp.setOutputWidth(400);
+
+
 }
 /**********************************************************************/
 
@@ -67,12 +74,13 @@ int main()
 {
     int k;
     Mat img;
+
     ///open video camera
     VideoCapture cap = cv::VideoCapture(1);
-    PerspectiveCorrection persp;
 
 
-    setupPerspectiveTransform(cap,persp);
+
+    setupPerspectiveTransform(cap,filt.getPerspectiveCorrection());
 
 
     if ( !cap.isOpened() )
@@ -84,6 +92,9 @@ int main()
 	createTrackbar("Adaptive kernel","image",&adaptiveKernelSize,25,adaptiveKernelSizeChanged);
 	createTrackbar("Brightness","image",&brightness,255,brightnessChanged);
 
+	createTrackbar("Height","image",&height,600,heightChanged);
+	createTrackbar("Width","image",&width,600,widthChanged);
+
     while (1)
     {
         cap >> img;
@@ -91,12 +102,7 @@ int main()
             break;
 
         //cv::cvtColor(img,img,CV_BGR2GRAY);
-        img = persp.applyPerspectiveCorrection(img);
         img = filt.getFrame(img);
-
-
-
-
 
 
 

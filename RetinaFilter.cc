@@ -72,6 +72,8 @@ Mat RetinaFilter::enhanceOutput(Mat mask, Mat originalImage) {
 
 
 Mat RetinaFilter::getFrame(Mat img) {
+	img = _persp.applyPerspectiveCorrection(img);
+
 	cvtColor(img,img,CV_BGR2GRAY);
 
 	GaussianBlur(img,img,Size(3,3),0);
@@ -86,10 +88,15 @@ Mat RetinaFilter::getFrame(Mat img) {
 
 	// Pass it through averaging filter, to
 	// reduce the static noise.
-	Mat average = _accumulator.getAverage(img);
+	img = _accumulator.getAverage(img);
 
 	// img[average < _backgroundAverageThreshold] = 255
-	threshold(average,img,_backgroundAverageThreshold,255,THRESH_BINARY_INV);
+	threshold(img,img,_backgroundAverageThreshold,255,THRESH_BINARY_INV);
 
 	return enhanceOutput(img,original);
+}
+
+
+PerspectiveCorrection& RetinaFilter::getPerspectiveCorrection() {
+	return _persp;
 }

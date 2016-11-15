@@ -8,7 +8,6 @@ public:
 	Mat getAverage(Mat image);
 
 private:
-  bool _readFirstFrame;
   float _threshold;
   Mat _avg;
 };
