@@ -2,6 +2,7 @@
 #include "RetinaFilter.h"
 #include "PerspectiveCorrection.h"
 #include <sstream>
+#include <iostream>
 
 
 using namespace cv;
@@ -75,8 +76,9 @@ int main()
     int k;
     Mat img;
 
+
     ///open video camera
-    VideoCapture cap = cv::VideoCapture(1);
+    VideoCapture cap = cv::VideoCapture(0);
 
 
 
@@ -101,7 +103,6 @@ int main()
         if ( img.empty() )
             break;
 
-        //cv::cvtColor(img,img,CV_BGR2GRAY);
         img = filt.getFrame(img);
 
 

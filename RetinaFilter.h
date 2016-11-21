@@ -1,3 +1,6 @@
+#ifndef __RETINA_FILTER_H__
+#define __RETINA_FILTER_H__
+
 #include "OpenCV.h"
 #include "PerspectiveCorrection.h"
 #include "RunningAverage.h"
@@ -25,3 +28,5 @@ private:
 
   Mat enhanceOutput(Mat mask,Mat originalImage);
 };
+
+#endif

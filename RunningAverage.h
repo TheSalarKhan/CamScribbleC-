@@ -1,3 +1,6 @@
+#ifndef __RUNNING_AVERAGE_H__
+#define __RUNNING_AVERAGE_H__
+
 #include "OpenCV.h"
 using namespace cv;
 
@@ -11,3 +14,6 @@ private:
   float _threshold;
   Mat _avg;
 };
+
+
+#endif
