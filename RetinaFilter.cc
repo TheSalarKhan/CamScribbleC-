@@ -39,61 +39,74 @@ void RetinaFilter::setBrightness(int val) {
   }
 }
 
-Mat RetinaFilter::enhanceOutput(Mat mask, Mat originalImage) {
-  Mat toReturn;
+void RetinaFilter::enhanceOutput(Mat& mask, Mat& originalImage, Mat& outputImage) {
 
   // original Image should be grayscale.
   // bitwise the (original image + 1) with
   // mask, and invert to get intensity image.
-  bitwise_and(mask, originalImage + 1, toReturn);
-  toReturn = 255 - toReturn;
+  bitwise_and(mask, originalImage + 1, outputImage);
+  outputImage = 255 - outputImage;
 
   // Where ever there is 255 set it to 0
-  threshold(toReturn, toReturn, 244, 0, CV_THRESH_TOZERO_INV);
+  threshold(outputImage, outputImage, 244, 0, CV_THRESH_TOZERO_INV);
 
   // find maximum value in image.
   double mx,temp;
-  minMaxLoc(toReturn, &temp, &mx);
+  minMaxLoc(outputImage, &temp, &mx);
   int max = mx;
 
 
   int intensityToAdd = _desiredMaxIntensity - max;
 
-  toReturn = toReturn + intensityToAdd;
+  outputImage = outputImage + intensityToAdd;
 
   // Any values less than zero should be set to zero.
-  threshold(toReturn, toReturn, 0, 0, CV_THRESH_TOZERO);
+  threshold(outputImage, outputImage, 0, 0, CV_THRESH_TOZERO);
 
-  bitwise_and(mask, toReturn, toReturn);
-
-  return toReturn;
+  bitwise_and(mask, outputImage, outputImage);
 
 }
 
 
-Mat RetinaFilter::getFrame(Mat img) {
-	img = _persp.applyPerspectiveCorrection(img);
+void RetinaFilter::applyFilter(const Mat& inputImage,Mat& alphaMask,Mat& outputImage) {
+	// the input image is a raw feed, its an RGB image.
+	// alphaMask and outputImage are of the same dimension.
 
-	cvtColor(img,img,CV_BGR2GRAY);
+	// 1) Apply perspective transformation.
+	_persp.applyPerspectiveCorrection(inputImage,alphaMask);
 
-	GaussianBlur(img,img,Size(3,3),0);
 
-	Mat original;
-	img.copyTo(original);
+	// 2) convert to grayscale
+	cvtColor(alphaMask,alphaMask,CV_BGR2GRAY);
 
+	// 3) apply smoothing filter
+	GaussianBlur(alphaMask,alphaMask,Size(3,3),0);
+
+	// temporarily copy the input image to the output
+	// image.
+	alphaMask.copyTo(outputImage);
+
+	// 4) Apply adaptive thresholding.
 	// We have selected THRESH_BINARY,
 	// so that the white bg, becomes 255,
 	// and the black ink becomes 0.
-	adaptiveThreshold(img,img,255,ADAPTIVE_THRESH_GAUSSIAN_C,THRESH_BINARY,_averageThreshGridSize,_subtractFromMean);
+	adaptiveThreshold(alphaMask,alphaMask,255,ADAPTIVE_THRESH_GAUSSIAN_C,THRESH_BINARY,_averageThreshGridSize,_subtractFromMean);
 
+	// 5) Remove camera noise by averaging, with the last frames.
 	// Pass it through averaging filter, to
 	// reduce the static noise.
-	img = _accumulator.getAverage(img);
+	_accumulator.getAverage(alphaMask,alphaMask);
 
+	// 6) Threshold the average.
 	// img[average < _backgroundAverageThreshold] = 255
-	threshold(img,img,_backgroundAverageThreshold,255,THRESH_BINARY_INV);
+	threshold(alphaMask,alphaMask,_backgroundAverageThreshold,255,THRESH_BINARY_INV);
 
-	return enhanceOutput(img,original);
+	// 7) enhance output.
+	enhanceOutput(alphaMask,outputImage,outputImage);
+
+	// When control leaves this function, inputImage will have
+	// the binary mask. and the outputImage will have the enhanced
+	// version of the mask - which is the output.
 }
 
 

@@ -8,7 +8,7 @@ class RunningAverage {
 public:
 	RunningAverage();
 	RunningAverage(float threshold);
-	Mat getAverage(Mat image);
+	void getAverage(Mat& inputImage,Mat& outputImage);
 
 private:
   float _threshold;

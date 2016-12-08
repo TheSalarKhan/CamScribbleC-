@@ -15,7 +15,7 @@ public:
   void setNoiseSupressionLeveL(int val);
   void setBackgroundAveragingThreshold(int val);
   void setBrightness(int val);
-  Mat getFrame(Mat image);
+  void applyFilter(const Mat& inputImage, Mat& alphaMask, Mat& outputImage);
   PerspectiveCorrection& getPerspectiveCorrection();
 
 private:
@@ -26,7 +26,7 @@ private:
   PerspectiveCorrection _persp;
   RunningAverage _accumulator;
 
-  Mat enhanceOutput(Mat mask,Mat originalImage);
+  void enhanceOutput(Mat& mask, Mat& originalImage, Mat& outputImage);
 };
 
 #endif

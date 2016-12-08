@@ -10,19 +10,17 @@ RunningAverage::RunningAverage(float threshold) {
 }
 
 
-Mat RunningAverage::getAverage(Mat image) {
-  Mat toReturn;
+void RunningAverage::getAverage(Mat& inputImage,Mat& outputImage){
 
   // If the size of the input image and
   // _avg is not same. Then discard the
   // already present _avg and replace it
   // with image. Else accumulate the frame
-  if(image.rows != _avg.rows || image.cols != _avg.cols) {
-	image.convertTo(_avg,CV_32FC3, 1/255.0);
+  if(inputImage.rows != _avg.rows || inputImage.cols != _avg.cols) {
+	inputImage.convertTo(_avg,CV_32FC3, 1/255.0);
   } else {
-	accumulateWeighted(image, _avg, _threshold);
+	accumulateWeighted(inputImage, _avg, _threshold);
   }
 
-  convertScaleAbs(_avg, toReturn);
-  return toReturn;
+  convertScaleAbs(_avg, outputImage);
 }

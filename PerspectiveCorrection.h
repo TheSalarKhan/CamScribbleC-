@@ -19,11 +19,13 @@ public:
   void setOutputWidth(int width);
   void setOutputHeight(int height);
 
-  Mat applyPerspectiveCorrection(Mat image);
+  void applyPerspectiveCorrection(const Mat& inputImage, Mat& outputImage);
 
 private:
   PerspectiveCorrectionParams _params;
   Mat _transformationMatrix;
+  int _inputImageCols,_inputImageRows;
+
 
   void calculateTransformationMatrix();
 };

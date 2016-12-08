@@ -1,6 +1,7 @@
 #include "OpenCV.h"
 #include "RetinaFilter.h"
 #include "PerspectiveCorrection.h"
+#include "BigCanvas.h"
 #include <sstream>
 #include <iostream>
 
@@ -8,31 +9,41 @@
 using namespace cv;
 using namespace std;
 
-RetinaFilter filt;
+//RetinaFilter filt;
+BigCanvas filt;
 int adaptiveThresh =0;
 int adaptiveKernelSize = 3;
 int brightness = 255;
-int width = 400;
-int height = 400;
+int width = 50;
+int height = 50;
+
+int red = 255;
+int green = 255;
+int blue = 255;
 
 void adaptiveThreshChanged(int,void*) {
-	filt.setNoiseSupressionLeveL(adaptiveThresh);
+	filt.setNoise(adaptiveThresh);
 }
 
 void adaptiveKernelSizeChanged(int,void*) {
-	filt.setAdaptiveKernelSize(adaptiveKernelSize);
+	filt.setStrokeWidth(adaptiveKernelSize);
 }
 
 void brightnessChanged(int,void*) {
-	filt.setBrightness(brightness);
+	filt.setBrightness(brightness/255.0);
 }
 
 void heightChanged(int,void*) {
-	filt.getPerspectiveCorrection().setOutputHeight(height);
+	filt.setHeight(height/100.0);
+
 }
 
 void widthChanged(int,void*) {
-	filt.getPerspectiveCorrection().setOutputWidth(width);
+	filt.setWidth(width/100.0);
+}
+
+void colorChanged(int,void*) {
+	filt.setInkColor(Point3f(red/255.0,green/255.0,blue/255.0));
 }
 
 
@@ -40,19 +51,26 @@ void widthChanged(int,void*) {
 
 /**********************************************************************/
 int pointIndex = 0;
-Point2f points[4]; // tl,tr,bl,br
+float imageWidth,imageHeight;
+vector<Point2f> points; // tl,tr,bl,br
 void my_mouse_callback( int event, int x, int y, int flags, void* param ) {
     if(event==EVENT_LBUTTONDBLCLK){
-    	points[pointIndex++] = Point2f(x,y);
+    	points.push_back(Point2f(x/float(imageWidth),y/float(imageHeight)));
+    	pointIndex++;
     }
 }
-void setupPerspectiveTransform(VideoCapture& cap,PerspectiveCorrection& persp) {
+
+void setupPerspectiveTransform(VideoCapture& cap,BigCanvas& persp) {
 	Mat image;
 	namedWindow("select four points");
 	setMouseCallback("select four points", my_mouse_callback, &image );
 	int k;
 	while(pointIndex < 4) {
 		cap >> image;
+
+		imageWidth = image.cols;
+		imageHeight = image.rows;
+
 		imshow("select four points",image);
 
 		k = waitKey(10) & 0xFF;
@@ -63,10 +81,7 @@ void setupPerspectiveTransform(VideoCapture& cap,PerspectiveCorrection& persp) {
 	destroyWindow("select four points");
 
 
-	persp.setSurfaceCorners(points[0],points[1],points[2],points[3]);
-	persp.setOutputHeight(400);
-	persp.setOutputWidth(400);
-
+	persp = BigCanvas(Size(400,400),Scalar(0,0,0),points);
 
 }
 /**********************************************************************/
@@ -74,7 +89,14 @@ void setupPerspectiveTransform(VideoCapture& cap,PerspectiveCorrection& persp) {
 int main()
 {
     int k;
+
     Mat img;
+    Mat output;
+
+    Mat r,g,b,a;
+
+    Point3f color(0.3,0.4,0.7);
+    Point2f position(0.5f,0.5f);
 
 
     ///open video camera
@@ -82,7 +104,7 @@ int main()
 
 
 
-    setupPerspectiveTransform(cap,filt.getPerspectiveCorrection());
+    setupPerspectiveTransform(cap,filt);
 
 
     if ( !cap.isOpened() )
@@ -90,12 +112,22 @@ int main()
 
     cap >> img;
     imshow("image",img);
-    createTrackbar("Adaptive thresh","image",&adaptiveThresh,255,adaptiveThreshChanged);
-	createTrackbar("Adaptive kernel","image",&adaptiveKernelSize,25,adaptiveKernelSizeChanged);
-	createTrackbar("Brightness","image",&brightness,255,brightnessChanged);
 
-	createTrackbar("Height","image",&height,600,heightChanged);
-	createTrackbar("Width","image",&width,600,widthChanged);
+    namedWindow("controls");
+    createTrackbar("Adaptive thresh","controls",&adaptiveThresh,255,adaptiveThreshChanged);
+	createTrackbar("Adaptive kernel","controls",&adaptiveKernelSize,25,adaptiveKernelSizeChanged);
+	createTrackbar("Brightness","controls",&brightness,255,brightnessChanged);
+
+	createTrackbar("Height","controls",&height,100,heightChanged);
+	createTrackbar("Width","controls",&width,100,widthChanged);
+
+
+
+
+	createTrackbar("R","controls",&red,255,colorChanged);
+	createTrackbar("G","controls",&green,255,colorChanged);
+	createTrackbar("B","controls",&blue,255,colorChanged);
+
 
     while (1)
     {
@@ -103,15 +135,46 @@ int main()
         if ( img.empty() )
             break;
 
-        img = filt.getFrame(img);
+        filt.getFrame(img,output);
+
+        imshow("image", output);
 
 
-
-
-        imshow("image", img);
 		k = waitKey(10) & 0xFF;
-			if (k == 27)
-				break;
+
+
+
+		switch(k) {
+		case 27:
+			exit(0);
+			break;
+		case 'w':
+			position.y -= ((position.y+0.1f) >= 0)? 0.1f:0;
+			filt.setPosition(position);
+			break;
+		case 's':
+			position.y += ((position.y-0.1f) <= 1)? 0.1f:0;
+			filt.setPosition(position);
+			break;
+		case 'a':
+			position.x -= ((position.x-0.1f) >= 0)? 0.1f:0;
+			filt.setPosition(position);
+			break;
+		case 'd':
+			position.x += ((position.x+0.1f) <= 1)? 0.1f:0;
+			filt.setPosition(position);
+			break;
+		case 'l':
+			filt.lock();
+			break;
+		case 'u':
+			filt.undo();
+			break;
+		case 'r':
+			filt.redo();
+			break;
+		}
+
     }
 
     return 0;

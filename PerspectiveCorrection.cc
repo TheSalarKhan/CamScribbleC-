@@ -9,12 +9,11 @@ PerspectiveCorrection::PerspectiveCorrection() {
     _params.br = Point2f(0.0f,0.0f);
 
   _params.width = _params.height = 0;
+
 }
 
 PerspectiveCorrection::PerspectiveCorrection(PerspectiveCorrectionParams p) {
   _params = p;
-
-  calculateTransformationMatrix();
 }
 
 void PerspectiveCorrection::setSurfaceCorners(Point2f tl, Point2f tr, Point2f bl, Point2f br) {
@@ -23,7 +22,6 @@ void PerspectiveCorrection::setSurfaceCorners(Point2f tl, Point2f tr, Point2f bl
   _params.bl = bl;
   _params.br = br;
 
-  calculateTransformationMatrix();
 
 }
 
@@ -44,21 +42,40 @@ void PerspectiveCorrection::setOutputHeight(int height) {
 }
 
 
-Mat PerspectiveCorrection::applyPerspectiveCorrection(Mat image) {
-  Mat toReturn;
-  warpPerspective(image, toReturn, _transformationMatrix,
+void PerspectiveCorrection::applyPerspectiveCorrection(const Mat& inputImage,Mat& outputImage) {
+
+
+  if(inputImage.rows != _inputImageRows || inputImage.cols != _inputImageCols) {
+	  _inputImageCols = inputImage.cols;
+	  _inputImageRows = inputImage.rows;
+	  calculateTransformationMatrix();
+
+  }
+
+
+  warpPerspective(inputImage, outputImage, _transformationMatrix,
     Size(_params.width,_params.height));
-  return toReturn;
+
 }
 
 
+// This function needs to be called whenever, input image size changes,
+// or when the output image height changes.
 void PerspectiveCorrection::calculateTransformationMatrix() {
-  const Point2f src[] = {_params.tl,_params.tr,_params.bl,_params.br};
-  const Point2f dst[] = {
-    Point2f(0.0f,0.0f),
-    Point2f(_params.width,0.0f),
-    Point2f(0.0f,_params.height),
-    Point2f(_params.width,_params.height)
-  };
-  _transformationMatrix = cv::getPerspectiveTransform(src,dst);
+	// tl,tr,bl,br are normalized between 1-0.
+	// need to de-normalize - multiply with input image dimensions - them before calculating transformation matrix.
+
+	const Point2f src[] = {
+			Point2f(_params.tl.x * _inputImageCols,_params.tl.y * _inputImageRows),
+			Point2f(_params.tr.x * _inputImageCols,_params.tr.y * _inputImageRows),
+			Point2f(_params.bl.x * _inputImageCols,_params.bl.y * _inputImageRows),
+			Point2f(_params.br.x * _inputImageCols,_params.br.y * _inputImageRows)
+	};
+	const Point2f dst[] = {
+	Point2f(0.0f,0.0f),
+	Point2f(_params.width,0.0f),
+	Point2f(0.0f,_params.height),
+	Point2f(_params.width,_params.height)
+	};
+	_transformationMatrix = cv::getPerspectiveTransform(src,dst);
 }
