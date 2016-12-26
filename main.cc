@@ -1,6 +1,4 @@
 #include "OpenCV.h"
-#include "RetinaFilter.h"
-#include "PerspectiveCorrection.h"
 #include "BigCanvas.h"
 #include <sstream>
 #include <iostream>
@@ -80,28 +78,65 @@ void setupPerspectiveTransform(VideoCapture& cap,BigCanvas& persp) {
 
 	destroyWindow("select four points");
 
-
-	persp = BigCanvas(Size(400,400),Scalar(0,0,0),points);
+	persp.setPerspective(points);
 
 }
 /**********************************************************************/
+int handleError( int status, const char* func_name,
+            const char* err_msg, const char* file_name,
+            int line, void* userdata )
+{
+    //Do nothing -- will suppress console output
+    return 0;   //Return value is not used
+}
+
+
+bool isCameraValid(int camId) {
+    try {
+      cv::VideoCapture temp = cv::VideoCapture(camId);
+    } catch(cv::Exception& e) {
+      return false;
+    }
+
+    return true;
+  }
+
+
+int countCameras()
+{
+	cv::VideoCapture temp_camera;
+	int maxTested = 10;
+	for (int i = 0; i < maxTested; i++){
+		if(!isCameraValid(i))
+			return i;
+	}
+	return maxTested;
+}
+
 
 int main()
 {
+
     int k;
 
     Mat img;
+    Mat img2;
     Mat output;
 
-    Mat r,g,b,a;
-
-    Point3f color(0.3,0.4,0.7);
     Point2f position(0.5f,0.5f);
 
-
-    ///open video camera
     VideoCapture cap = cv::VideoCapture(0);
+    //VideoCapture cap2 = cv::VideoCapture(1);
 
+
+    std::vector<Point2f> points;
+
+    points.push_back(Point2f(0.0f,0.0f));
+    points.push_back(Point2f(0.0f,0.0f));
+    points.push_back(Point2f(0.0f,0.0f));
+    points.push_back(Point2f(0.0f,0.0f));
+
+    filt = BigCanvas(Size(400,400),Scalar(0,0,0),points);
 
 
     setupPerspectiveTransform(cap,filt);
@@ -122,8 +157,6 @@ int main()
 	createTrackbar("Width","controls",&width,100,widthChanged);
 
 
-
-
 	createTrackbar("R","controls",&red,255,colorChanged);
 	createTrackbar("G","controls",&green,255,colorChanged);
 	createTrackbar("B","controls",&blue,255,colorChanged);
@@ -132,15 +165,17 @@ int main()
     while (1)
     {
         cap >> img;
+        //cap2 >> img2;
         if ( img.empty() )
             break;
 
         filt.getFrame(img,output);
 
         imshow("image", output);
+        //imshow("image2", img2);
 
 
-		k = waitKey(10) & 0xFF;
+		k = waitKey(1) & 0xFF;
 
 
 
@@ -173,10 +208,12 @@ int main()
 		case 'r':
 			filt.redo();
 			break;
+		case 'e':
+			filt.exportAsImage("output.png");
+			break;
 		}
 
     }
-
     return 0;
 }
 

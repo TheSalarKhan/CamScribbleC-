@@ -17,15 +17,10 @@ class BigCanvas {
 public:
 	BigCanvas();
 	BigCanvas(Size sizeOfBigCanvas,Scalar backgroundColor,std::vector<Point2f> points);
-
 	void getFrame(Mat& inputImage, Mat& outputImage);
-
 	void undo();
-
 	void redo();
-
 	void setInkColor(Point3f color);
-
 	void setNoise(int val);
 	void setStrokeWidth(int val);
 	void setPosition(Point2f normalizedPosition);
@@ -33,11 +28,8 @@ public:
 	void exportAsImage(std::string path);
 	void setWidth(float percentage);
 	void setHeight(float percntage);
-
 	void setPerspective(std::vector<Point2f> points);
-
 	void lock();
-
 	virtual ~BigCanvas();
 
 private:

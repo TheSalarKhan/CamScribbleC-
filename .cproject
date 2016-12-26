@@ -43,11 +43,12 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.730732473" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.463374243" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.paths.1418262259" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/home/salar/OpenCV/opencv-3.1.0/release/output_lib_shared/lib"/>
-									<listOptionValue builtIn="false" value="/home/salar/OpenCV/opencv-3.1.0/release/output_lib_shared/share/OpenCV/3rdparty/lib"/>
+									<listOptionValue builtIn="false" value="/home/salar/OpenCV/opencv-3.1.0/output_lib/lib"/>
+									<listOptionValue builtIn="false" value="/home/salar/OpenCV/opencv-3.1.0/output_lib/share/OpenCV/3rdparty/lib"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.874786109" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="opencv_core"/>
+									<listOptionValue builtIn="false" value="opencv_imgcodecs"/>
 									<listOptionValue builtIn="false" value="opencv_highgui"/>
 									<listOptionValue builtIn="false" value="opencv_videoio"/>
 									<listOptionValue builtIn="false" value="opencv_imgproc"/>

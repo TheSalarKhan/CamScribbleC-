@@ -243,7 +243,7 @@ void BigCanvas::setBrightness(float percentBright) {
 }
 
 void  BigCanvas::exportAsImage(std::string path){
-
+	imwrite(path.c_str(),_bigCanvas);
 }
 
 
